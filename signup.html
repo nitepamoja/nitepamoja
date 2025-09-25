@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - NitePamoja</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <main class="auth-container">
+        <a href="index.html" class="logo auth-logo">NitePamoja</a>
+        
+        <form id="signup-form" class="auth-form">
+            <h1>Create Your Discreet Account</h1>
+            
+            <div class="input-group">
+                <label for="signup-username">Username</label>
+                <input type="text" id="signup-username" placeholder="Choose a unique username" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="signup-email">Email</label>
+                <input type="email" id="signup-email" placeholder="you@example.com" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="signup-password">Password</label>
+                <input type="password" id="signup-password" placeholder="Choose a strong password" required>
+            </div>
+            
+            <button type="submit" class="cta-btn-large">Create Account</button>
+            
+            <p id="error-message" class="error-text"></p> <p class="secondary-link">
+                Already have an account? <a href="#">Log In</a>
+            </p>
+        </form>
+    </main>
+    
+</body>
+</html>
