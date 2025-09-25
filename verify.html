@@ -17,29 +17,27 @@
         <div id="verification-form" class="auth-form">
             <h1>Final Step: Live Verification</h1>
             <p class="verification-instructions">
-                To ensure safety for everyone, we need to quickly verify you're a real person. Please allow camera access.
+                Please look directly at the camera and hold still.
             </p>
 
             <div class="camera-container">
-                <video id="webcam" autoplay playsinline></video>
-                <canvas id="canvas" style="display: none;"></canvas> </div>
-
-            <div id="gesture-prompt" class="gesture-prompt">
-                Your gesture is: <strong>Raise Two Fingers</strong>
+                <video id="webcam" autoplay muted playsinline></video>
+                <canvas id="overlay"></canvas>
             </div>
             
-            <button id="verify-button" class="cta-btn-large">Verify Me</button>
+            <button id="verify-button" class="cta-btn-large" disabled>Loading AI Models...</button>
             
-            <p id="verification-status" class="status-text"></p> </div>
+            <p id="verification-status" class="status-text"></p>
+        </div>
     </main>
-        
-    
+
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     
     <script src="verify.js"></script>
-
 </body>
 </html>
