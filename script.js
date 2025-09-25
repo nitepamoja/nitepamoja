@@ -1,10 +1,6 @@
-// --- 1. FIREBASE INITIALIZATION ---
-// This is the most important line. It connects your website to your Firebase backend.
-firebase.initializeApp(firebaseConfig);
-
-
-// --- 2. HOMEPAGE ANIMATIONS ---
-// This code handles all the visual effects for the homepage.
+// --- HOMEPAGE ANIMATIONS ---
+// The Firebase initialization is now in firebase-config.js
+// All the code for animations is wrapped in this event listener
 document.addEventListener('DOMContentLoaded', () => {
 
     // Logic for the "fade-in on scroll" animation
