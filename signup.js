@@ -1,3 +1,5 @@
+console.log("Signup script is running!"); // Our test message
+
 // This script handles the user sign-up process
 const signupForm = document.getElementById('signup-form');
 const usernameInput = document.getElementById('signup-username');
@@ -7,7 +9,9 @@ const errorMessage = document.getElementById('error-message');
 
 signupForm.addEventListener('submit', (event) => {
     event.preventDefault();
-
+    // ... rest of the code is the same
+    console.log("Create Account button was clicked!"); // Added another test
+    
     const username = usernameInput.value;
     const email = emailInput.value;
     const password = passwordInput.value;
@@ -15,7 +19,6 @@ signupForm.addEventListener('submit', (event) => {
     firebase.auth().createUserWithEmailAndPassword(email, password)
         .then((userCredential) => {
             const userId = userCredential.user.uid;
-
             return firebase.firestore().collection('users').doc(userId).set({
                 username: username,
                 createdAt: new Date()
@@ -24,12 +27,10 @@ signupForm.addEventListener('submit', (event) => {
         .then(() => {
             console.log('Account created and username saved!');
             errorMessage.textContent = '';
-            
             window.location.href = 'verify.html';
         })
         .catch((error) => {
             console.error("Error during sign up: ", error);
-            
             if (error.code === 'auth/email-already-in-use') {
                 errorMessage.textContent = 'This email address is already in use.';
             } else if (error.code === 'auth/weak-password') {
