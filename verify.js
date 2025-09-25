@@ -1,4 +1,4 @@
-// This script now waits for Firebase to confirm the user is logged in.
+console.log("verify.js script has started."); // Checkpoint 1
 
 const webcamVideo = document.getElementById('webcam');
 const verifyButton = document.getElementById('verify-button');
@@ -8,23 +8,24 @@ const ctx = overlay.getContext('2d');
 
 let modelsLoaded = false;
 
-// We wrap our entire logic in the auth listener
+console.log("Setting up Firebase auth listener..."); // Checkpoint 2
+
 firebase.auth().onAuthStateChanged(user => {
+    console.log("Auth state has changed. User object:", user); // Checkpoint 3
+
     if (user) {
-        // If a user IS logged in, start the AI and camera setup.
-        console.log("User is authenticated on verify page. Starting setup...");
+        console.log("User is authenticated. Calling loadModels()..."); // Checkpoint 4
         if (!modelsLoaded) {
             loadModels();
         }
     } else {
-        // If NO user is logged in, send them to the login page.
-        console.log("No user found on verify page. Redirecting to login.");
+        console.log("No user found. Redirecting to login page..."); // Checkpoint 5
         window.location.href = 'login.html';
     }
 });
 
 async function loadModels() {
-    // This function is the same as before
+    console.log("Attempting to load AI models..."); // Checkpoint 6
     const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
     try {
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
@@ -32,6 +33,7 @@ async function loadModels() {
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
         await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
         modelsLoaded = true;
+        console.log("AI Models Loaded Successfully!"); // Checkpoint 7
         verifyButton.disabled = false;
         verifyButton.textContent = 'Verify Me';
         startWebcam();
@@ -41,8 +43,9 @@ async function loadModels() {
     }
 }
 
+// The rest of the functions (startWebcam, event listeners) are the same
+// ... (The rest of your verify.js file is correct)
 async function startWebcam() {
-    // This function is the same as before
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         webcamVideo.srcObject = stream;
@@ -52,7 +55,6 @@ async function startWebcam() {
 }
 
 webcamVideo.addEventListener('play', () => {
-    // This code is the same as before
     const displaySize = { width: webcamVideo.width, height: webcamVideo.height };
     faceapi.matchDimensions(overlay, displaySize);
     setInterval(async () => {
@@ -66,11 +68,9 @@ webcamVideo.addEventListener('play', () => {
 });
 
 verifyButton.addEventListener('click', async () => {
-    // This function is the same as before
     verificationStatus.textContent = 'Analyzing...';
     try {
-        const user = firebase.auth().currentUser; // We can safely get the user here now
-        // ... the rest of the verification logic is the same
+        const user = firebase.auth().currentUser;
         const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
         const userData = userDoc.data();
         if (!userData || !userData.photoURLs || userData.photoURLs.length === 0) { throw new Error("No profile photos found to compare against."); }
