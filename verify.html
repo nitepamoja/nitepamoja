@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Verification - NitePamoja</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <main class="auth-container">
+        <a href="index.html" class="logo auth-logo">NitePamoja</a>
+        
+        <div id="verification-form" class="auth-form">
+            <h1>Final Step: Live Verification</h1>
+            <p class="verification-instructions">
+                To ensure safety for everyone, we need to quickly verify you're a real person. Please allow camera access.
+            </p>
+
+            <div class="camera-container">
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="canvas" style="display: none;"></canvas> </div>
+
+            <div id="gesture-prompt" class="gesture-prompt">
+                Your gesture is: <strong>Raise Two Fingers</strong>
+            </div>
+            
+            <button id="verify-button" class="cta-btn-large">Verify Me</button>
+            
+            <p id="verification-status" class="status-text"></p> </div>
+    </main>
+    
+</body>
+</html>
