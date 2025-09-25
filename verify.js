@@ -1,103 +1,97 @@
-// This script uses Google's TensorFlow.js and MobileNet model for face comparison.
+// This script now waits for Firebase to confirm the user is logged in.
 
-// --- 1. SELECT THE HTML ELEMENTS ---
 const webcamVideo = document.getElementById('webcam');
 const verifyButton = document.getElementById('verify-button');
 const verificationStatus = document.getElementById('verification-status');
-const canvas = document.getElementById('canvas');
+const overlay = document.getElementById('overlay');
+const ctx = overlay.getContext('2d');
 
-let model; // Variable to hold our AI model
+let modelsLoaded = false;
 
-// --- 2. LOAD THE AI MODEL & START WEBCAM ---
-async function setup() {
+// We wrap our entire logic in the auth listener
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        // If a user IS logged in, start the AI and camera setup.
+        console.log("User is authenticated on verify page. Starting setup...");
+        if (!modelsLoaded) {
+            loadModels();
+        }
+    } else {
+        // If NO user is logged in, send them to the login page.
+        console.log("No user found on verify page. Redirecting to login.");
+        window.location.href = 'login.html';
+    }
+});
+
+async function loadModels() {
+    // This function is the same as before
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
     try {
-        // Load the MobileNet model from Google's servers
-        model = await mobilenet.load();
-        console.log("AI Model Loaded Successfully");
-
-        // Start the webcam feed
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        webcamVideo.srcObject = stream;
-
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+        modelsLoaded = true;
         verifyButton.disabled = false;
         verifyButton.textContent = 'Verify Me';
-    } catch (err) {
-        console.error("Setup failed:", err);
-        verificationStatus.textContent = "Could not start verification. Please allow camera access and refresh.";
-        verificationStatus.style.color = "#e74c3c";
+        startWebcam();
+    } catch (error) {
+        console.error("Error loading AI models:", error);
+        verificationStatus.textContent = "Could not load AI models. Please refresh.";
     }
 }
 
-// --- 3. HELPER FUNCTION TO CALCULATE SIMILARITY ---
-// This function compares the "fingerprints" of two images.
-function cosineSimilarity(embeddingA, embeddingB) {
-    let dotProduct = 0;
-    let magnitudeA = 0;
-    let magnitudeB = 0;
-    for (let i = 0; i < embeddingA.length; i++) {
-        dotProduct += embeddingA[i] * embeddingB[i];
-        magnitudeA += embeddingA[i] * embeddingA[i];
-        magnitudeB += embeddingB[i] * embeddingB[i];
-    }
-    magnitudeA = Math.sqrt(magnitudeA);
-    magnitudeB = Math.sqrt(magnitudeB);
-    if (magnitudeA && magnitudeB) {
-        return dotProduct / (magnitudeA * magnitudeB);
-    } else {
-        return 0;
-    }
-}
-
-// --- 4. HANDLE THE VERIFICATION CLICK ---
-verifyButton.addEventListener('click', async () => {
-    verificationStatus.textContent = 'Analyzing...';
-    verificationStatus.style.color = 'var(--secondary-accent)';
-
+async function startWebcam() {
+    // This function is the same as before
     try {
-        const user = firebase.auth().currentUser;
-        if (!user) throw new Error("User not authenticated.");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        webcamVideo.srcObject = stream;
+    } catch (err) {
+        verificationStatus.textContent = "Camera access denied.";
+    }
+}
 
-        // Get user's uploaded photos from Firestore
+webcamVideo.addEventListener('play', () => {
+    // This code is the same as before
+    const displaySize = { width: webcamVideo.width, height: webcamVideo.height };
+    faceapi.matchDimensions(overlay, displaySize);
+    setInterval(async () => {
+        const detections = await faceapi.detectAllFaces(webcamVideo, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+        if (resizedDetections && resizedDetections[0]) {
+            faceapi.draw.drawDetections(overlay, resizedDetections);
+        }
+    }, 100);
+});
+
+verifyButton.addEventListener('click', async () => {
+    // This function is the same as before
+    verificationStatus.textContent = 'Analyzing...';
+    try {
+        const user = firebase.auth().currentUser; // We can safely get the user here now
+        // ... the rest of the verification logic is the same
         const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
         const userData = userDoc.data();
-        if (!userData || !userData.photoURLs || userData.photoURLs.length === 0) {
-            throw new Error("No profile photos found to compare against.");
-        }
-
-        // --- A. Get the "fingerprint" from the user's profile photo ---
-        const profileImage = new Image();
-        profileImage.crossOrigin = "anonymous"; // Important for loading images from Firebase Storage
-        profileImage.src = userData.photoURLs[0];
-        await profileImage.decode(); // Wait for image to load
-        const profileEmbedding = await model.infer(profileImage, true);
-
-        // --- B. Get the "fingerprint" from the live webcam feed ---
-        // Draw the current video frame to our hidden canvas
-        canvas.width = webcamVideo.videoWidth;
-        canvas.height = webcamVideo.videoHeight;
-        canvas.getContext('2d').drawImage(webcamVideo, 0, 0);
-        const selfieEmbedding = await model.infer(canvas, true);
-        
-        // --- C. Compare the two fingerprints ---
-        const similarity = cosineSimilarity(profileEmbedding.arraySync()[0], selfieEmbedding.arraySync()[0]);
-        console.log("Face similarity score:", similarity);
-
-        // We'll set a threshold, e.g., 0.8 (80% similar)
-        if (similarity > 0.8) {
+        if (!userData || !userData.photoURLs || userData.photoURLs.length === 0) { throw new Error("No profile photos found to compare against."); }
+        const liveDetection = await faceapi.detectSingleFace(webcamVideo).withFaceLandmarks().withFaceDescriptor();
+        if (!liveDetection) { throw new Error("No face detected in the live feed."); }
+        const profileImage = await faceapi.fetchImage(userData.photoURLs[0]);
+        const profileDetection = await faceapi.detectSingleFace(profileImage).withFaceLandmarks().withFaceDescriptor();
+        if (!profileDetection) { throw new Error("Could not detect a face in the profile photo."); }
+        const faceMatcher = new faceapi.FaceMatcher([profileDetection.descriptor]);
+        const bestMatch = faceMatcher.findBestMatch(liveDetection.descriptor);
+        if (bestMatch.label !== 'unknown' && bestMatch.distance < 0.5) {
             verificationStatus.textContent = "Verification Successful!";
             verificationStatus.style.color = "#2ecc71";
             await firebase.firestore().collection('users').doc(user.uid).update({ verified: true });
             setTimeout(() => { window.location.href = 'app.html'; }, 1500);
         } else {
-            throw new Error("Faces do not appear to match. Please try again.");
+            throw new Error("Faces do not match. Please try again.");
         }
-
     } catch (error) {
         console.error("Verification failed:", error);
         verificationStatus.textContent = error.message;
         verificationStatus.style.color = "#e74c3c";
     }
 });
-
-// --- 5. START EVERYTHING ---
-setup();
