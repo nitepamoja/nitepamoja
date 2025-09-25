@@ -279,3 +279,86 @@ nav a:hover {
     background-color: var(--primary-accent);
     border-radius: 4px;
 }
+/* --- AUTHENTICATION PAGE STYLES --- */
+.auth-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+.auth-logo {
+    margin-bottom: 40px;
+    font-size: 32px;
+}
+
+.auth-form {
+    width: 100%;
+    max-width: 450px;
+    background-color: var(--bg-light);
+    padding: 40px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.auth-form h1 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 2rem;
+    margin-bottom: 30px;
+}
+
+.input-group {
+    text-align: left;
+    margin-bottom: 25px;
+}
+
+.input-group label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+}
+
+.input-group input {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--bg-dark);
+    border: 2px solid #333;
+    border-radius: 10px;
+    color: var(--text-light);
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--primary-accent);
+}
+
+.auth-form .cta-btn-large {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.error-text {
+    color: #e74c3c;
+    margin-top: 15px;
+    min-height: 20px; /* Reserve space so layout doesn't jump */
+    font-weight: 700;
+}
+
+.secondary-link {
+    margin-top: 30px;
+    color: var(--text-dark);
+}
+
+.secondary-link a {
+    color: var(--secondary-accent);
+    font-weight: 700;
+    text-decoration: none;
+}
+
