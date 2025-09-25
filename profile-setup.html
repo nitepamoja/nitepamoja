@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Your Profile - NitePamoja</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <main class="auth-container">
+        <a href="index.html" class="logo auth-logo">NitePamoja</a>
+        
+        <form id="profile-setup-form" class="auth-form">
+            <h1>Setup Your Profile</h1>
+            <p class="profile-setup-instructions">
+                Add up to 3 photos and a short bio. Remember, you can set your photos to be blurred later.
+            </p>
+
+            <div class="photo-upload-container">
+                <div class="photo-slot">
+                    <input type="file" id="photo1" accept="image/*" class="photo-input">
+                    <label for="photo1" class="photo-label">+</label>
+                </div>
+                <div class="photo-slot">
+                    <input type="file" id="photo2" accept="image/*" class="photo-input">
+                    <label for="photo2" class="photo-label">+</label>
+                </div>
+                <div class="photo-slot">
+                    <input type="file" id="photo3" accept="image/*" class="photo-input">
+                    <label for="photo3" class="photo-label">+</label>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="profile-bio">Your Bio</label>
+                <textarea id="profile-bio" placeholder="Write a short, engaging bio..." rows="4" maxlength="150"></textarea>
+            </div>
+            
+            <button type="submit" class="cta-btn-large">Complete Profile</button>
+            
+            <p id="status-message" class="status-text"></p>
+        </form>
+    </main>
+    
+</body>
+</html>
