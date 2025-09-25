@@ -1,6 +1,13 @@
+// --- 1. FIREBASE INITIALIZATION ---
+// This is the most important line. It connects your website to your Firebase backend.
+firebase.initializeApp(firebaseConfig);
+
+
+// --- 2. HOMEPAGE ANIMATIONS ---
+// This code handles all the visual effects for the homepage.
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. Fade-in on Scroll Animation ---
+    // Logic for the "fade-in on scroll" animation
     const hiddenElements = document.querySelectorAll('.hidden');
     const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
@@ -14,14 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
     hiddenElements.forEach((el) => observer.observe(el));
 
 
-    // --- 2. Enhanced Auto-scrolling for Premium Features Section ---
+    // Logic for the auto-scrolling premium features section
     const scrollContainer = document.querySelector('.scroll-container');
     if (scrollContainer) {
         let scrollAmount = 0;
         let userIsInteracting = false;
         let autoScrollInterval;
 
-        // Functions to start and stop auto-scrolling
         const startAutoScroll = () => {
             autoScrollInterval = setInterval(() => {
                 if (!userIsInteracting) {
@@ -29,9 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (scrollAmount >= scrollWidth / 2) {
                         scrollAmount = 0;
+                        scrollContainer.scrollTo({ left: 0, behavior: 'auto' });
+                    } else {
+                        scrollAmount += 0.5; // Scroll speed
+                        scrollContainer.scrollTo({ left: scrollAmount, behavior: 'auto' });
                     }
-                    scrollContainer.scrollTo({ left: scrollAmount, behavior: 'auto' });
-                    scrollAmount += 0.5; // Scroll speed
                 }
             }, 20); // Interval
         };
@@ -40,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(autoScrollInterval);
         };
 
-        // Pause on any user interaction
+        // Pause on any user interaction (mouse, touch, wheel)
         ['mouseenter', 'touchstart', 'mousedown', 'wheel'].forEach(event => {
             scrollContainer.addEventListener(event, () => {
                 userIsInteracting = true;
@@ -52,8 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ['mouseleave', 'touchend', 'mouseup'].forEach(event => {
             scrollContainer.addEventListener(event, () => {
                 userIsInteracting = false;
-                // Update scrollAmount to current position before restarting
-                scrollAmount = scrollContainer.scrollLeft;
+                scrollAmount = scrollContainer.scrollLeft; // Update position
                 stopAutoScroll(); // Clear any existing interval
                 startAutoScroll(); // Start a new one
             });
