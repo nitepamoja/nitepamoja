@@ -17,22 +17,22 @@
         <div id="verification-form" class="auth-form">
             <h1>Final Step: Live Verification</h1>
             <p class="verification-instructions">
-                Please look directly at the camera and hold still.
+                Please allow camera access and look directly at the camera.
             </p>
 
             <div class="camera-container">
                 <video id="webcam" autoplay muted playsinline></video>
-                <canvas id="overlay"></canvas>
-            </div>
+                <canvas id="canvas" style="display: none;"></canvas> </div>
             
-            <button id="verify-button" class="cta-btn-large" disabled>Loading AI Models...</button>
+            <button id="verify-button" class="cta-btn-large" disabled>Loading AI Model...</button>
             
             <p id="verification-status" class="status-text"></p>
         </div>
     </main>
-
-    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
