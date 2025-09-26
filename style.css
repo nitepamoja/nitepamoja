@@ -531,3 +531,24 @@ nav a:hover {
     margin-top: 10px;
     line-height: 1.6;
 }
+/* --- MEET REQUEST BUTTON STYLES --- */
+.meet-request-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    background: var(--primary-accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.meet-request-btn:hover {
+    background: var(--secondary-accent);
+    color: var(--bg-dark);
+    transform: scale(1.05);
+}
