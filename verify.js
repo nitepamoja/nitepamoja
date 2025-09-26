@@ -1,4 +1,4 @@
-// This script now displays its progress on the screen for easier debugging on mobile.
+// Definitive version of verify.js with on-screen logging
 
 const webcamVideo = document.getElementById('webcam');
 const verifyButton = document.getElementById('verify-button');
@@ -6,18 +6,21 @@ const verificationStatus = document.getElementById('verification-status');
 const overlay = document.getElementById('overlay');
 const ctx = overlay.getContext('2d');
 
-let model;
-
 // Helper function to show status messages on the screen
 function updateStatus(message, isError = false) {
-    verificationStatus.textContent = message;
-    verificationStatus.style.color = isError ? '#e74c3c' : 'var(--secondary-accent)';
-    console.log(message); // We'll still log to console for good measure
+    if (verificationStatus) {
+        verificationStatus.textContent = message;
+        verificationStatus.style.color = isError ? '#e74c3c' : 'var(--secondary-accent)';
+    }
+    console.log(message); // Still log to console for good measure
 }
 
 async function main() {
     updateStatus("Initializing verification...");
-    await loadModels();
+    // A short delay to make sure Firebase is ready
+    setTimeout(() => {
+        loadModels();
+    }, 500);
 }
 
 async function loadModels() {
@@ -58,7 +61,6 @@ async function startWebcam() {
     }
 }
 
-// The rest of the file (event listeners for the video and button) is the same.
 webcamVideo.addEventListener('play', () => {
     const displaySize = { width: webcamVideo.width, height: webcamVideo.height };
     faceapi.matchDimensions(overlay, displaySize);
