@@ -1,5 +1,3 @@
-// This script now waits for the page to be fully loaded before running.
-
 document.addEventListener('DOMContentLoaded', () => {
     // This code will only run after the entire page is ready.
     
@@ -18,7 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadModels() {
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+        // THE ONLY CHANGE IS THIS ONE LINE:
+        const MODEL_URL = 'https://unpkg.com/face-api.js@0.22.2/weights';
+        
         try {
             updateStatus("Loading AI Model: Face Detector...");
             await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
