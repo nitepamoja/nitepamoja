@@ -5,11 +5,10 @@ const profileGrid = document.getElementById('profile-grid');
 const logoutButton = document.getElementById('logout-button');
 
 // --- 2. AUTHENTICATION GUARD ---
-// This is the most important part. It checks if a user is logged in.
-// onAuthStateChanged is a listener that runs whenever the user's login state changes.
+// This listener runs when the page loads to check if a user is logged in.
 firebase.auth().onAuthStateChanged(user => {
     if (user) {
-        // If a user is logged in, we can fetch the profiles.
+        // If a user is logged in, fetch the profiles.
         console.log('User is logged in:', user.uid);
         fetchAndDisplayProfiles(user.uid);
     } else {
@@ -24,7 +23,7 @@ async function fetchAndDisplayProfiles(currentUserId) {
     try {
         // Query the 'users' collection in Firestore
         const snapshot = await firebase.firestore().collection('users')
-            .where('profileComplete', '==', true) // Only get users who have finished setup
+            .where('profileComplete', '==', true) // This is the safety check
             .get();
 
         let profilesHTML = ''; // Start with an empty string to build our HTML
@@ -42,6 +41,9 @@ async function fetchAndDisplayProfiles(currentUserId) {
                         <div class="profile-card-info">
                             <h3>${userData.username}</h3>
                             <p>${userData.bio || 'No bio provided.'}</p>
+                            <button class="meet-request-btn" data-userid="${userId}">
+                                Send Meet Request
+                            </button>
                         </div>
                     </div>
                 `;
@@ -59,8 +61,7 @@ async function fetchAndDisplayProfiles(currentUserId) {
 // --- 4. LOGOUT FUNCTIONALITY ---
 logoutButton.addEventListener('click', () => {
     firebase.auth().signOut().then(() => {
-        // Sign-out successful. The onAuthStateChanged listener above will automatically
-        // detect the change and redirect the user to the signup page.
+        // Sign-out successful.
         console.log('User logged out');
     }).catch((error) => {
         console.error('Logout error:', error);
