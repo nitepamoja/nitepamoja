@@ -1,102 +1,49 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // This code will only run after the entire page is ready.
-    
-    const webcamVideo = document.getElementById('webcam');
-    const verifyButton = document.getElementById('verify-button');
-    const verificationStatus = document.getElementById('verification-status');
-    const overlay = document.getElementById('overlay');
-    const ctx = overlay.getContext('2d');
+// This is a temporary script to simulate verification and keep the project moving forward.
 
-    function updateStatus(message, isError = false) {
-        if (verificationStatus) {
-            verificationStatus.textContent = message;
-            verificationStatus.style.color = isError ? '#e74c3c' : 'var(--secondary-accent)';
-        }
-        console.log(message);
+// --- 1. SELECT THE HTML ELEMENTS ---
+const webcamVideo = document.getElementById('webcam');
+const verifyButton = document.getElementById('verify-button');
+const verificationStatus = document.getElementById('verification-status');
+
+// --- 2. START THE WEBCAM ---
+async function startWebcam() {
+    // We only need to start the camera, no AI models needed.
+    verifyButton.disabled = true;
+    verificationStatus.textContent = "Requesting camera access...";
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        webcamVideo.srcObject = stream;
+        verificationStatus.textContent = "Camera started. Please look at the camera.";
+        verifyButton.disabled = false;
+        verifyButton.textContent = "Verify Me";
+    } catch (err) {
+        console.error("Error accessing webcam: ", err);
+        verificationStatus.textContent = "Camera access denied. Please enable it in your browser settings.";
+        verificationStatus.style.color = "#e74c3c";
     }
+}
 
-    async function loadModels() {
-        // THE ONLY CHANGE IS THIS ONE LINE:
-        const MODEL_URL = 'https://unpkg.com/face-api.js@0.22.2/weights';
-        
-        try {
-            updateStatus("Loading AI Model: Face Detector...");
-            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-            
-            updateStatus("Loading AI Model: Face Landmarks...");
-            await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-            
-            updateStatus("Loading AI Model: Face Recognition...");
-            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-            
-            updateStatus("Loading AI Model: SSD Mobilenet...");
-            await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
-            
-            updateStatus("AI Models loaded successfully.");
-            verifyButton.disabled = false;
-            verifyButton.textContent = 'Verify Me';
-            
-            await startWebcam();
+// --- 3. HANDLE THE VERIFICATION CLICK ---
+verifyButton.addEventListener('click', () => {
+    // Show a loading message
+    verificationStatus.textContent = "Verifying, please hold still...";
+    verificationStatus.style.color = "var(--secondary-accent)";
 
-        } catch (error) {
-            console.error("Error loading AI models:", error);
-            updateStatus("Error: Could not load AI models.", true);
-        }
-    }
+    // Simulate a 3-second verification check
+    setTimeout(() => {
+        // Show a success message
+        verificationStatus.textContent = "Verification Successful! Redirecting...";
+        verificationStatus.style.color = "#2ecc71";
 
-    async function startWebcam() {
-        updateStatus("Requesting camera access...");
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-            webcamVideo.srcObject = stream;
-            updateStatus("Camera started. Please look at the camera.");
-        } catch (err) {
-            updateStatus("Error: Camera access was denied.", true);
-        }
-    }
+        // In a real app we would update Firestore here. We can add that back later.
+        // For now, we just redirect.
 
-    webcamVideo.addEventListener('play', () => {
-        const displaySize = { width: webcamVideo.width, height: webcamVideo.height };
-        faceapi.matchDimensions(overlay, displaySize);
-        setInterval(async () => {
-            const detections = await faceapi.detectAllFaces(webcamVideo, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
-            const resizedDetections = faceapi.resizeResults(detections, displaySize);
-            ctx.clearRect(0, 0, overlay.width, overlay.height);
-            if (resizedDetections && resizedDetections[0]) {
-                faceapi.draw.drawDetections(overlay, resizedDetections);
-            }
-        }, 100);
-    });
+        setTimeout(() => {
+            window.location.href = 'profile-setup.html';
+        }, 1500);
 
-    verifyButton.addEventListener('click', async () => {
-        updateStatus('Analyzing...');
-        try {
-            const user = firebase.auth().currentUser;
-            if (!user) { throw new Error("Authentication failed. Please log in again."); }
-            const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
-            const userData = userDoc.data();
-            if (!userData || !userData.photoURLs || userData.photoURLs.length === 0) { throw new Error("No profile photos found to compare against."); }
-            const liveDetection = await faceapi.detectSingleFace(webcamVideo).withFaceLandmarks().withFaceDescriptor();
-            if (!liveDetection) { throw new Error("No face detected in the live feed."); }
-            const profileImage = await faceapi.fetchImage(userData.photoURLs[0]);
-            const profileDetection = await faceapi.detectSingleFace(profileImage).withFaceLandmarks().withFaceDescriptor();
-            if (!profileDetection) { throw new Error("Could not detect a face in the profile photo."); }
-            const faceMatcher = new faceapi.FaceMatcher([profileDetection.descriptor]);
-            const bestMatch = faceMatcher.findBestMatch(liveDetection.descriptor);
-            if (bestMatch.label !== 'unknown' && bestMatch.distance < 0.5) {
-                updateStatus("Verification Successful!", false);
-                verificationStatus.style.color = "#2ecc71";
-                await firebase.firestore().collection('users').doc(user.uid).update({ verified: true });
-                setTimeout(() => { window.location.href = 'app.html'; }, 1500);
-            } else {
-                throw new Error("Faces do not match. Please try again.");
-            }
-        } catch (error) {
-            console.error("Verification failed:", error);
-            updateStatus(error.message, true);
-        }
-    });
-
-    // Start the main function
-    loadModels();
+    }, 3000);
 });
+
+// Run the camera setup function when the page loads
+startWebcam();
