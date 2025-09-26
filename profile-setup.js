@@ -1,4 +1,4 @@
-// This script now waits for Firebase to confirm the user is logged in.
+// This script now displays its progress on the screen for easier debugging.
 
 const profileSetupForm = document.getElementById('profile-setup-form');
 const photoInputs = document.querySelectorAll('.photo-input');
@@ -6,21 +6,16 @@ const photoLabels = document.querySelectorAll('.photo-label');
 const bioTextarea = document.getElementById('profile-bio');
 const statusMessage = document.getElementById('status-message');
 
-// We wrap our main logic in the auth listener
-firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-        // If a user IS logged in, we can set up the form.
-        console.log("User is authenticated on profile-setup page.");
-        setupFormListener(user); // Pass the user object to our function
-    } else {
-        // If NO user is logged in, send them to the login page.
-        console.log("No user found on profile-setup page. Redirecting to login.");
-        window.location.href = 'login.html';
+// Helper function to show status messages on the screen
+function updateStatus(message, isError = false) {
+    if (statusMessage) {
+        statusMessage.textContent = message;
+        statusMessage.style.color = isError ? '#e74c3c' : 'var(--secondary-accent)';
     }
-});
+    console.log(message);
+}
 
-
-// This part handles the image previews and is the same as before
+// Image preview logic (no changes here)
 photoInputs.forEach((input, index) => {
     input.addEventListener('change', (event) => {
         const file = event.target.files[0];
@@ -37,49 +32,60 @@ photoInputs.forEach((input, index) => {
     });
 });
 
-// We put the form submission logic inside a function
-function setupFormListener(user) {
-    profileSetupForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        statusMessage.textContent = 'Saving your profile...';
-        
-        try {
-            // The rest of this function is the same as before
-            const filesToUpload = [];
-            photoInputs.forEach(input => {
-                if (input.files[0]) {
-                    filesToUpload.push(input.files[0]);
-                }
-            });
+// Form submission logic with live progress updates
+profileSetupForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    updateStatus('Saving your profile...');
 
-            const uploadPromises = filesToUpload.map(file => {
-                const filePath = `profile_photos/${user.uid}/${file.name}`;
-                const storageRef = firebase.storage().ref(filePath);
-                return storageRef.put(file);
-            });
-            const uploadSnapshots = await Promise.all(uploadPromises);
-
-            const urlPromises = uploadSnapshots.map(snapshot => snapshot.ref.getDownloadURL());
-            const photoURLs = await Promise.all(urlPromises);
-
-            const userProfileRef = firebase.firestore().collection('users').doc(user.uid);
-            await userProfileRef.update({
-                bio: bioTextarea.value,
-                photoURLs: photoURLs,
-                profileComplete: true
-            });
-
-            statusMessage.textContent = 'Profile complete! Welcome.';
-            statusMessage.style.color = '#2ecc71';
-
-            setTimeout(() => {
-                window.location.href = 'app.html';
-            }, 1500);
-
-        } catch (error) {
-            console.error('Error setting up profile:', error);
-            statusMessage.textContent = 'An error occurred. Please try again.';
-            statusMessage.style.color = '#e74c3c';
+    try {
+        updateStatus('Checking authentication...');
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            throw new Error('No user is signed in.');
         }
-    });
-}
+
+        const filesToUpload = [];
+        photoInputs.forEach(input => {
+            if (input.files[0]) {
+                filesToUpload.push(input.files[0]);
+            }
+        });
+
+        if (filesToUpload.length === 0) {
+            throw new Error('Please upload at least one photo.');
+        }
+        
+        updateStatus(`Preparing to upload ${filesToUpload.length} photo(s)...`);
+
+        const uploadPromises = filesToUpload.map((file, index) => {
+            updateStatus(`Uploading photo ${index + 1} of ${filesToUpload.length}...`);
+            const filePath = `profile_photos/${user.uid}/${file.name}`;
+            const storageRef = firebase.storage().ref(filePath);
+            return storageRef.put(file);
+        });
+
+        const uploadSnapshots = await Promise.all(uploadPromises);
+        updateStatus('All photos uploaded. Getting links...');
+
+        const urlPromises = uploadSnapshots.map(snapshot => snapshot.ref.getDownloadURL());
+        const photoURLs = await Promise.all(urlPromises);
+        updateStatus('Links retrieved. Saving profile to database...');
+
+        const userProfileRef = firebase.firestore().collection('users').doc(user.uid);
+        await userProfileRef.update({
+            bio: bioTextarea.value,
+            photoURLs: photoURLs,
+            profileComplete: true
+        });
+        updateStatus('Profile complete! Welcome.', false);
+        statusMessage.style.color = '#2ecc71';
+
+        setTimeout(() => {
+            window.location.href = 'app.html';
+        }, 1500);
+
+    } catch (error) {
+        console.error('Error setting up profile:', error);
+        updateStatus(error.message, true);
+    }
+});
