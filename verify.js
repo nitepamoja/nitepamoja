@@ -1,4 +1,4 @@
-// This is a more direct script for verification.
+// This script now displays its progress on the screen for easier debugging on mobile.
 
 const webcamVideo = document.getElementById('webcam');
 const verifyButton = document.getElementById('verify-button');
@@ -8,41 +8,57 @@ const ctx = overlay.getContext('2d');
 
 let model;
 
-// We place all our code inside a main function that we call at the end.
+// Helper function to show status messages on the screen
+function updateStatus(message, isError = false) {
+    verificationStatus.textContent = message;
+    verificationStatus.style.color = isError ? '#e74c3c' : 'var(--secondary-accent)';
+    console.log(message); // We'll still log to console for good measure
+}
+
 async function main() {
-    console.log("Verification page script started.");
-    
-    // We now directly call our setup functions.
+    updateStatus("Initializing verification...");
     await loadModels();
-    await startWebcam();
 }
 
 async function loadModels() {
     const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
     try {
+        updateStatus("Loading AI Model: Face Detector...");
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        
+        updateStatus("Loading AI Model: Face Landmarks...");
         await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+        
+        updateStatus("Loading AI Model: Face Recognition...");
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        
+        updateStatus("Loading AI Model: SSD Mobilenet...");
         await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
         
-        console.log("AI Models Loaded Successfully!");
+        updateStatus("AI Models loaded successfully.");
         verifyButton.disabled = false;
         verifyButton.textContent = 'Verify Me';
+        
+        await startWebcam();
+
     } catch (error) {
         console.error("Error loading AI models:", error);
-        verificationStatus.textContent = "Could not load AI models. Please refresh.";
+        updateStatus("Error: Could not load AI models.", true);
     }
 }
 
 async function startWebcam() {
+    updateStatus("Requesting camera access...");
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         webcamVideo.srcObject = stream;
+        updateStatus("Camera started. Please look at the camera.");
     } catch (err) {
-        verificationStatus.textContent = "Camera access denied.";
+        updateStatus("Error: Camera access was denied.", true);
     }
 }
 
+// The rest of the file (event listeners for the video and button) is the same.
 webcamVideo.addEventListener('play', () => {
     const displaySize = { width: webcamVideo.width, height: webcamVideo.height };
     faceapi.matchDimensions(overlay, displaySize);
@@ -57,13 +73,10 @@ webcamVideo.addEventListener('play', () => {
 });
 
 verifyButton.addEventListener('click', async () => {
-    verificationStatus.textContent = 'Analyzing...';
+    updateStatus('Analyzing...');
     try {
         const user = firebase.auth().currentUser;
-        if (!user) {
-            // If after all this the user is still null, the session is definitely lost.
-            throw new Error("Authentication failed. Please log in again.");
-        }
+        if (!user) { throw new Error("Authentication failed. Please log in again."); }
         const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
         const userData = userDoc.data();
         if (!userData || !userData.photoURLs || userData.photoURLs.length === 0) { throw new Error("No profile photos found to compare against."); }
@@ -75,7 +88,7 @@ verifyButton.addEventListener('click', async () => {
         const faceMatcher = new faceapi.FaceMatcher([profileDetection.descriptor]);
         const bestMatch = faceMatcher.findBestMatch(liveDetection.descriptor);
         if (bestMatch.label !== 'unknown' && bestMatch.distance < 0.5) {
-            verificationStatus.textContent = "Verification Successful!";
+            updateStatus("Verification Successful!", false);
             verificationStatus.style.color = "#2ecc71";
             await firebase.firestore().collection('users').doc(user.uid).update({ verified: true });
             setTimeout(() => { window.location.href = 'app.html'; }, 1500);
@@ -84,11 +97,9 @@ verifyButton.addEventListener('click', async () => {
         }
     } catch (error) {
         console.error("Verification failed:", error);
-        verificationStatus.textContent = error.message;
-        verificationStatus.style.color = "#e74c3c";
+        updateStatus(error.message, true);
     }
 });
 
 // Start the main function
 main();
-
