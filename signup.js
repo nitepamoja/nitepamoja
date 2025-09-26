@@ -1,5 +1,3 @@
-console.log("Signup script is running!"); // Our test message
-
 // This script handles the user sign-up process
 const signupForm = document.getElementById('signup-form');
 const usernameInput = document.getElementById('signup-username');
@@ -9,9 +7,7 @@ const errorMessage = document.getElementById('error-message');
 
 signupForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    // ... rest of the code is the same
-    console.log("Create Account button was clicked!"); // Added another test
-    
+
     const username = usernameInput.value;
     const email = emailInput.value;
     const password = passwordInput.value;
@@ -27,7 +23,9 @@ signupForm.addEventListener('submit', (event) => {
         .then(() => {
             console.log('Account created and username saved!');
             errorMessage.textContent = '';
-            window.location.href = 'verify.html';
+            
+            // THE CHANGE IS HERE: We add ?signup_success=true to the URL
+            window.location.href = 'verify.html?signup_success=true';
         })
         .catch((error) => {
             console.error("Error during sign up: ", error);
