@@ -1,4 +1,4 @@
-console.log("verify.js script has started."); // Checkpoint 1
+// This is a more direct script for verification.
 
 const webcamVideo = document.getElementById('webcam');
 const verifyButton = document.getElementById('verify-button');
@@ -6,45 +6,34 @@ const verificationStatus = document.getElementById('verification-status');
 const overlay = document.getElementById('overlay');
 const ctx = overlay.getContext('2d');
 
-let modelsLoaded = false;
+let model;
 
-console.log("Setting up Firebase auth listener..."); // Checkpoint 2
-
-firebase.auth().onAuthStateChanged(user => {
-    console.log("Auth state has changed. User object:", user); // Checkpoint 3
-
-    if (user) {
-        console.log("User is authenticated. Calling loadModels()..."); // Checkpoint 4
-        if (!modelsLoaded) {
-            loadModels();
-        }
-    } else {
-        console.log("No user found. Redirecting to login page..."); // Checkpoint 5
-        window.location.href = 'login.html';
-    }
-});
+// We place all our code inside a main function that we call at the end.
+async function main() {
+    console.log("Verification page script started.");
+    
+    // We now directly call our setup functions.
+    await loadModels();
+    await startWebcam();
+}
 
 async function loadModels() {
-    console.log("Attempting to load AI models..."); // Checkpoint 6
     const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
     try {
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
         await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
-        modelsLoaded = true;
-        console.log("AI Models Loaded Successfully!"); // Checkpoint 7
+        
+        console.log("AI Models Loaded Successfully!");
         verifyButton.disabled = false;
         verifyButton.textContent = 'Verify Me';
-        startWebcam();
     } catch (error) {
         console.error("Error loading AI models:", error);
         verificationStatus.textContent = "Could not load AI models. Please refresh.";
     }
 }
 
-// The rest of the functions (startWebcam, event listeners) are the same
-// ... (The rest of your verify.js file is correct)
 async function startWebcam() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
@@ -71,6 +60,10 @@ verifyButton.addEventListener('click', async () => {
     verificationStatus.textContent = 'Analyzing...';
     try {
         const user = firebase.auth().currentUser;
+        if (!user) {
+            // If after all this the user is still null, the session is definitely lost.
+            throw new Error("Authentication failed. Please log in again.");
+        }
         const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
         const userData = userDoc.data();
         if (!userData || !userData.photoURLs || userData.photoURLs.length === 0) { throw new Error("No profile photos found to compare against."); }
@@ -95,3 +88,7 @@ verifyButton.addEventListener('click', async () => {
         verificationStatus.style.color = "#e74c3c";
     }
 });
+
+// Start the main function
+main();
+
